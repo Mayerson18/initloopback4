@@ -1,7 +1,7 @@
 import { Entity, model, property } from '@loopback/repository';
 
 @model()
-export class User extends Entity {
+export class Commitment extends Entity {
   @property({
     type: 'number',
     id: true,
@@ -11,57 +11,61 @@ export class User extends Entity {
 
   @property({
     type: 'string',
-    required: true,
     default: "",
   })
-  firstName: string;
-
-  @property({
-    type: 'string',
-    required: true,
-    default: "",
-  })
-  lastName: string;
-
-  @property({
-    type: 'string',
-    required: true,
-    default: "",
-  })
-  password: string;
+  description?: string;
 
   @property({
     type: 'string',
     default: "",
   })
-  verifiedEmail?: string;
+  responsable?: string;
 
   @property({
     type: 'string',
-    required: true,
     default: "",
   })
-  email: string;
+  observations?: string;
+
+  @property({
+    type: 'number',
+    required: true,
+    default: 1,
+  })
+  status: number;
+
+  @property({
+    type: 'date',
+    default: () => new Date(),
+  })
+  createdAt?: Date;
 
   @property({
     type: 'array',
     itemType: 'string',
+    required: true,
+    default: [],
   })
-  roles?: string[];
+  attached: string[];
+
+  @property({
+    type: 'number',
+  })
+  meetingId?: number;
 
   @property({
     type: 'boolean',
-    default: true
+    default: true,
   })
   active?: boolean;
 
-  constructor(data?: Partial<User>) {
+  constructor(data?: Partial<Commitment>) {
     super(data);
   }
 }
 
-export interface UserRelations {
+export interface CommitmentRelations {
   // describe navigational properties here
 }
 
-export type UserWithRelations = User & UserRelations;
+export type CommitmentWithRelations = Commitment & CommitmentRelations;
