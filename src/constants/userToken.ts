@@ -1,1 +1,1 @@
-export const TIME_LIFE = 2880; // en minutos
+export const TIME_LIFE = 5; // en minutos

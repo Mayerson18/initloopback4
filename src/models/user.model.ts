@@ -1,4 +1,4 @@
-import { Entity, model, property } from '@loopback/repository';
+import {Entity, model, property} from '@loopback/repository';
 
 @model()
 export class User extends Entity {
@@ -12,36 +12,42 @@ export class User extends Entity {
   @property({
     type: 'string',
     required: true,
-    default: "",
+    default: '',
   })
   firstName: string;
 
   @property({
     type: 'string',
     required: true,
-    default: "",
+    default: '',
   })
   lastName: string;
 
   @property({
     type: 'string',
     required: true,
-    default: "",
+    default: '',
   })
   password: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   verifiedEmail?: string;
 
   @property({
     type: 'string',
     required: true,
-    default: "",
+    default: '',
   })
   email: string;
+
+  @property({
+    type: 'string',
+    default: '',
+  })
+  phone?: string;
 
   @property({
     type: 'array',
@@ -51,7 +57,7 @@ export class User extends Entity {
 
   @property({
     type: 'boolean',
-    default: true
+    default: true,
   })
   active?: boolean;
 

@@ -1,25 +1,34 @@
-import { BootMixin } from '@loopback/boot';
-import { ApplicationConfig, BindingKey } from '@loopback/core';
+import {BootMixin} from '@loopback/boot';
+import {ApplicationConfig, BindingKey} from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
 } from '@loopback/rest-explorer';
-import { RepositoryMixin, juggler } from '@loopback/repository';
-import { RestApplication } from '@loopback/rest';
-import { ServiceMixin } from '@loopback/service-proxy';
+import {RepositoryMixin, juggler} from '@loopback/repository';
+import {RestApplication} from '@loopback/rest';
+import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
-import { MySequence } from './sequence';
-import { DbDataSource } from './datasources';
-import { AuthenticationComponent, registerAuthenticationStrategy } from '@loopback/authentication';
-import { AuthorizationComponent } from '@loopback/authorization';
-import { SECURITY_SCHEME_SPEC } from './utils/security-spec';
-import { TokenServiceBindings, TokenServiceConstants, PasswordHasherBindings, UserServiceBindings } from './keys';
-import { JWTService } from './services/jwt-service';
-import { BcryptHasher } from './services/hash.password.bcryptjs';
-import { MyUserService } from './services/user.service';
-import { JWTAuthenticationStrategy } from './authentication-strategies/jwt-strategy';
+import {MySequence} from './sequence';
+import {DbDataSource} from './datasources';
+import {
+  AuthenticationComponent,
+  registerAuthenticationStrategy,
+} from '@loopback/authentication';
+import {AuthorizationComponent} from '@loopback/authorization';
+import {SECURITY_SCHEME_SPEC} from './utils/security-spec';
+import {
+  TokenServiceBindings,
+  TokenServiceConstants,
+  PasswordHasherBindings,
+  UserServiceBindings,
+} from './keys';
+import {JWTService} from './services/jwt-service';
+import {BcryptHasher} from './services/hash.password.bcryptjs';
+import {MyUserService} from './services/user.service';
+import {JWTAuthenticationStrategy} from './authentication-strategies/jwt-strategy';
+import {ConfirmEmail} from './auth/confirmEmail';
+import {ForgotPassword} from './auth/forgotPassword';
 require('dotenv').config();
-
 
 export interface PackageInfo {
   name: string;
@@ -38,13 +47,14 @@ export class PresidenciaApplication extends BootMixin(
 
     this.api({
       openapi: '3.0.0',
-      info: { title: pkg.name, version: pkg.version },
+      info: {title: pkg.name, version: pkg.version},
       paths: {},
-      components: { securitySchemes: SECURITY_SCHEME_SPEC },
-      servers: [{ url: '/' }],
+      components: {securitySchemes: SECURITY_SCHEME_SPEC},
+      servers: [{url: '/'}],
     });
 
     this.setUpBindings();
+    this.setAuthBindig();
 
     // Set up default home page
     this.static('/', path.join(__dirname, '../public'));
@@ -61,7 +71,6 @@ export class PresidenciaApplication extends BootMixin(
     registerAuthenticationStrategy(this, JWTAuthenticationStrategy);
 
     this.sequence(MySequence);
-
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
@@ -110,7 +119,6 @@ export class PresidenciaApplication extends BootMixin(
       password: process.env.MYSQL_DB_PASSWORD,
       database: process.env.MYSQL_DB_DATABASE,
       insecureAuth: true,
-
     });
     this.bind('datasources.db').toClass(DbDataSource);
   }
@@ -121,5 +129,10 @@ export class PresidenciaApplication extends BootMixin(
         ? new juggler.DataSource(this.options.datasource)
         : DbDataSource;
     this.dataSource(datasource);
+  }
+
+  setAuthBindig(): void {
+    this.bind('authentication.confirm-email').toClass(ConfirmEmail);
+    this.bind('authentication.forgot-password').toClass(ForgotPassword);
   }
 }

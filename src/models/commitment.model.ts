@@ -1,4 +1,5 @@
-import { Entity, model, property } from '@loopback/repository';
+import { Entity, model, property, hasMany} from '@loopback/repository';
+import {StatusCommitments} from './status-commitments.model';
 
 @model()
 export class Commitment extends Entity {
@@ -58,6 +59,9 @@ export class Commitment extends Entity {
     default: true,
   })
   active?: boolean;
+
+  @hasMany(() => StatusCommitments)
+  statusCommitments: StatusCommitments[];
 
   constructor(data?: Partial<Commitment>) {
     super(data);

@@ -1,0 +1,47 @@
+{
+  "taskDefinition": {
+    "family": "presidencia",
+    "containerDefinitions": [
+      {
+        "name": "presidencia",
+        "image": "904764221713.dkr.ecr.us-east-1.amazonaws.com/presidencia:latest",
+        "cpu": 100,
+        "environment": [
+          {
+            name: 'MONGO_NAME',
+            value: 'db'
+          },
+          {
+            name: 'MYSQL_DB_HOST',
+            value: 'hicome-dev.c597jdlkgfcp.us-east-1.rds.amazonaws.com'
+          },
+          {
+            name: 'MYSQL_DB_PORT',
+            value: '3306'
+          },
+          {
+            name: 'MYSQL_DB_USER',
+            value: 'nzgrf1hlfj08'
+          },
+          {
+            name: 'MYSQL_DB_PASSWORD',
+            value: '23lqf0f5t7q7kzghee'
+          },
+          {
+            name: 'MYSQL_DB_DATABASE',
+            value: 'presidencia'
+          }
+        ],
+        "portMappings": [
+          {
+            "protocol": "tcp",
+            "containerPort": 3000,
+            "hostPort": 3000,
+          }
+        ],
+        "memory": 128,
+        "essential": true
+      }
+    ]
+  }
+}

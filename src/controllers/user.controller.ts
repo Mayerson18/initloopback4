@@ -21,26 +21,38 @@ import {
   requestBody,
   HttpErrors,
 } from '@loopback/rest';
-import { User } from '../models';
-import { UserRepository, Credentials } from '../repositories';
-import { PasswordHasherBindings, TokenServiceBindings, UserServiceBindings } from '../keys';
-import { PasswordHasher } from '../services/hash.password.bcryptjs';
-import { TokenService, authenticate } from '@loopback/authentication';
-import { inject } from '@loopback/core';
+import {User, UserTokens} from '../models';
 import {
-  CredentialsRequestBody, UserProfileSchema
+  UserRepository,
+  Credentials,
+  UserTokensRepository,
+} from '../repositories';
+import {
+  PasswordHasherBindings,
+  TokenServiceBindings,
+  UserServiceBindings,
+} from '../keys';
+import {PasswordHasher} from '../services/hash.password.bcryptjs';
+import {TokenService, authenticate} from '@loopback/authentication';
+import {inject} from '@loopback/core';
+import {
+  CredentialsRequestBody,
+  UserProfileSchema,
 } from './specs/user-controller.specs';
-import { pick } from 'lodash';
-import { validateCredentials } from '../services/validator';
-import { MyUserService } from '../services/user.service';
-import { OPERATION_SECURITY_SPEC } from '../utils/security-spec';
-import { SecurityBindings } from '@loopback/security';
-import { ConfirmEmail } from '../auth/confirmEmail';
-import { ForgotPassword } from '../auth/forgotPassword';
-// const Hashids = require('hashids/cjs');
-// const getRandomArbitrary = (min: number, max: number) => {
-//   return Math.round(Math.random() * (max - min) + min);
-// };
+import {pick} from 'lodash';
+import {validateCredentials} from '../services/validator';
+import {MyUserService} from '../services/user.service';
+import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
+import {SecurityBindings} from '@loopback/security';
+import {ConfirmEmail} from '../auth/confirmEmail';
+import {ForgotPassword} from '../auth/forgotPassword';
+import {TIME_LIFE} from '../constants/userToken';
+import moment from 'moment';
+const rp = require('request-promise');
+const Hashids = require('hashids/cjs');
+const getRandomArbitrary = (min: number, max: number) => {
+  return Math.round(Math.random() * (max - min) + min);
+};
 
 @model()
 export class NewUserRequest extends User {
@@ -55,6 +67,8 @@ export class UserController {
   constructor(
     @repository(UserRepository)
     public userRepository: UserRepository,
+    @repository(UserTokensRepository)
+    public userTokensRepository: UserTokensRepository,
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
     public passwordHasher: PasswordHasher,
     @inject(TokenServiceBindings.TOKEN_SERVICE)
@@ -65,7 +79,7 @@ export class UserController {
     protected confirmEmail: ConfirmEmail,
     @inject('authentication.forgot-password')
     protected forgotPassword: ForgotPassword,
-  ) { }
+  ) {}
 
   @post('/users', {
     responses: {
@@ -116,7 +130,7 @@ export class UserController {
     responses: {
       '200': {
         description: 'User model count',
-        content: { 'application/json': { schema: CountSchema } },
+        content: {'application/json': {schema: CountSchema}},
       },
     },
   })
@@ -134,7 +148,7 @@ export class UserController {
           'application/json': {
             schema: {
               type: 'array',
-              items: getModelSchemaRef(User, { includeRelations: true }),
+              items: getModelSchemaRef(User, {includeRelations: true}),
             },
           },
         },
@@ -142,7 +156,8 @@ export class UserController {
     },
   })
   async find(
-    @param.query.object('filter', getFilterSchemaFor(User)) filter?: Filter<User>,
+    @param.query.object('filter', getFilterSchemaFor(User))
+    filter?: Filter<User>,
   ): Promise<User[]> {
     console.log('try :');
     return this.userRepository.find(filter);
@@ -152,7 +167,7 @@ export class UserController {
     responses: {
       '200': {
         description: 'User PATCH success count',
-        content: { 'application/json': { schema: CountSchema } },
+        content: {'application/json': {schema: CountSchema}},
       },
     },
   })
@@ -160,7 +175,7 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(User, { partial: true }),
+          schema: getModelSchemaRef(User, {partial: true}),
         },
       },
     })
@@ -176,7 +191,7 @@ export class UserController {
         description: 'User model instance',
         content: {
           'application/json': {
-            schema: getModelSchemaRef(User, { includeRelations: true }),
+            schema: getModelSchemaRef(User, {includeRelations: true}),
           },
         },
       },
@@ -184,7 +199,8 @@ export class UserController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.query.object('filter', getFilterSchemaFor(User)) filter?: Filter<User>
+    @param.query.object('filter', getFilterSchemaFor(User))
+    filter?: Filter<User>,
   ): Promise<User> {
     return this.userRepository.findById(id, filter);
   }
@@ -201,7 +217,7 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(User, { partial: true }),
+          schema: getModelSchemaRef(User, {partial: true}),
         },
       },
     })
@@ -261,7 +277,7 @@ export class UserController {
     responses: {
       '200': {
         description: 'User model instance',
-        content: { 'application/json': { schema: getModelSchemaRef(User) } },
+        content: {'application/json': {schema: getModelSchemaRef(User)}},
       },
     },
   })
@@ -292,7 +308,7 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(User, { partial: true }),
+          schema: getModelSchemaRef(User, {partial: true}),
         },
       },
     })
@@ -307,8 +323,8 @@ export class UserController {
     // const count = await this.userRepository.updateAll({password}, {
     //   id: req.id
     // });
-    await this.userRepository.updateById(req.id, { password });
-    return { message: 'Usuario actualizado correctamente' };
+    await this.userRepository.updateById(req.id, {password});
+    return {message: 'Usuario actualizado correctamente'};
   }
 
   @post('/users/login', {
@@ -332,8 +348,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{ token: string }> {
-
+  ): Promise<{status: boolean}> {
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
 
@@ -344,8 +359,112 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
 
     // create a JSON Web Token based on the user profile
-    const token = await this.jwtService.generateToken(userProfile);
+    // const token = await this.jwtService.generateToken(userProfile);
+    const token = await generateTokenToPhone(
+      userProfile,
+      this.userTokensRepository,
+    );
+    const options: any = {
+      method: 'POST',
+      url: process.env.URL_SEND_WHATSAPP,
+      headers: {'Content-Type': 'application/json'},
+      body: {
+        text:
+          'Hola, su codigo de ingreso es: ' +
+          token +
+          ' El codigo tendra una duración de 5 minutos',
+        phone: '573506208514',
+      },
+      json: true,
+    };
+    rp(options);
+    return {status: true};
+  }
 
-    return { token };
+  @post('/users/login/token', {
+    responses: {
+      '200': {
+        description: 'Token',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                token: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async loginByToken(
+    @requestBody(CredentialsRequestBody) user: any,
+  ): Promise<{token: string}> {
+    // ensure the user exists, and the password is correct
+    await verifyToken(user.token, this.userTokensRepository);
+    const userAux = await this.userService.verifyCredentials(user);
+    console.log('user', user);
+    // convert a User object into a UserProfile object (reduced set of properties)
+    const userProfile = this.userService.convertToUserProfile(userAux);
+
+    // create a JSON Web Token based on the user profile
+    const token = await this.jwtService.generateToken(userProfile);
+    return {token};
   }
 }
+
+const generateTokenToPhone = async (
+  user: User,
+  userTokensRepository: UserTokensRepository,
+) => {
+  if (user === null) {
+    throw new HttpErrors.NotFound('El correo electrónico no existe.');
+  }
+
+  const date = moment().add(TIME_LIFE, 'm');
+  const hashids = new Hashids();
+  const token = hashids.encode(
+    getRandomArbitrary(0, 9),
+    getRandomArbitrary(0, 9),
+    getRandomArbitrary(0, 9),
+  );
+
+  console.log('token', token);
+
+  const userTokenAux = new UserTokens({
+    token,
+    status: true,
+    userId: user.id,
+    expiredAt: date.format('YYYY-MM-DD hh:mm:ss'),
+  });
+  await userTokensRepository.create(userTokenAux);
+  return token;
+};
+
+const verifyToken = async (
+  token: string,
+  userTokensRepository: UserTokensRepository,
+): Promise<UserTokens> => {
+  const userToken: UserTokens | null = await userTokensRepository.findOne({
+    where: {token: {like: token}},
+  });
+
+  if (userToken == null) {
+    throw new HttpErrors.NotFound('El token no existe.');
+  }
+
+  if (!userToken.status) {
+    throw new HttpErrors.Conflict('El Token no esta activado.');
+  }
+
+  const expiredAt = moment(userToken.expiredAt);
+  console.log('moment().diff(expiredAt)', moment().diff(expiredAt));
+
+  if (moment().diff(expiredAt) >= 0) {
+    throw new HttpErrors.Conflict('El Token expiro.');
+  }
+  return userToken;
+};

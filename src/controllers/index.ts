@@ -6,3 +6,4 @@ export * from './meeting-attendees.controller';
 export * from './meeting.controller';
 export * from './attendees.controller';
 export * from './commitment.controller';
+export * from './commitment-status-commitments.controller';

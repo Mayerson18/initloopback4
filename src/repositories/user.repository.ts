@@ -1,9 +1,10 @@
-import { DefaultCrudRepository } from '@loopback/repository';
-import { User, UserRelations } from '../models';
-import { DbDataSource } from '../datasources';
-import { inject } from '@loopback/core';
+import {DefaultCrudRepository} from '@loopback/repository';
+import {User, UserRelations} from '../models';
+import {DbDataSource} from '../datasources';
+import {inject} from '@loopback/core';
 
 export type Credentials = {
+  token?: string;
   email: string;
   password: string;
 };
@@ -12,11 +13,8 @@ export class UserRepository extends DefaultCrudRepository<
   User,
   typeof User.prototype.id,
   UserRelations
-  > {
-  constructor(
-    @inject('datasources.db') dataSource: DbDataSource,
-  ) {
+> {
+  constructor(@inject('datasources.db') dataSource: DbDataSource) {
     super(User, dataSource);
   }
-
 }
