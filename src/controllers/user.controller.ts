@@ -363,6 +363,8 @@ export class UserController {
       userProfile,
       this.userTokensRepository,
     );
+    const userAux = await this.userRepository.findById(userProfile.id);
+    console.log('userAux', userAux);
     const options: any = {
       method: 'POST',
       url: process.env.URL_SEND_WHATSAPP,
@@ -372,10 +374,11 @@ export class UserController {
           'Hola, su codigo de ingreso es: ' +
           token +
           ' El codigo tendra una duración de 5 minutos',
-        phone: '57' + userProfile.phone,
+        phone: '57' + userAux.phone,
       },
       json: true,
     };
+    console.log('options.body.phone', options.body.phone);
     rp(options);
     return {status: true};
   }
