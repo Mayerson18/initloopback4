@@ -372,7 +372,7 @@ export class UserController {
           'Hola, su codigo de ingreso es: ' +
           token +
           ' El codigo tendra una duración de 5 minutos',
-        phone: '573506208514',
+        phone: '57' + userProfile.phone,
       },
       json: true,
     };

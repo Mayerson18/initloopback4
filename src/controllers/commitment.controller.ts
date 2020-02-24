@@ -17,13 +17,18 @@ import {
   del,
   requestBody,
 } from '@loopback/rest';
-import {Commitment} from '../models';
-import {CommitmentRepository} from '../repositories';
+import {Commitment, StatusCommitments} from '../models';
+import {
+  CommitmentRepository,
+  StatusCommitmentsRepository,
+} from '../repositories';
 
 export class CommitmentController {
   constructor(
     @repository(CommitmentRepository)
-    public commitmentRepository : CommitmentRepository,
+    public commitmentRepository: CommitmentRepository,
+    @repository(StatusCommitmentsRepository)
+    public statusCommitmentsRepository: StatusCommitmentsRepository,
   ) {}
 
   @post('/commitments', {
@@ -47,7 +52,18 @@ export class CommitmentController {
     })
     commitment: Omit<Commitment, 'id'>,
   ): Promise<Commitment> {
-    return this.commitmentRepository.create(commitment);
+    const commitmentCreated = await this.commitmentRepository.create(
+      commitment,
+    );
+    if (commitment.status) {
+      const statusCommitment = new StatusCommitments({
+        active: true,
+        commitmentId: commitmentCreated.id,
+        value: commitmentCreated.status,
+      });
+      await this.statusCommitmentsRepository.create(statusCommitment);
+    }
+    return commitmentCreated;
   }
 
   @get('/commitments/count', {
@@ -59,7 +75,8 @@ export class CommitmentController {
     },
   })
   async count(
-    @param.query.object('where', getWhereSchemaFor(Commitment)) where?: Where<Commitment>,
+    @param.query.object('where', getWhereSchemaFor(Commitment))
+    where?: Where<Commitment>,
   ): Promise<Count> {
     return this.commitmentRepository.count(where);
   }
@@ -80,7 +97,8 @@ export class CommitmentController {
     },
   })
   async find(
-    @param.query.object('filter', getFilterSchemaFor(Commitment)) filter?: Filter<Commitment>,
+    @param.query.object('filter', getFilterSchemaFor(Commitment))
+    filter?: Filter<Commitment>,
   ): Promise<Commitment[]> {
     return this.commitmentRepository.find(filter);
   }
@@ -102,7 +120,8 @@ export class CommitmentController {
       },
     })
     commitment: Commitment,
-    @param.query.object('where', getWhereSchemaFor(Commitment)) where?: Where<Commitment>,
+    @param.query.object('where', getWhereSchemaFor(Commitment))
+    where?: Where<Commitment>,
   ): Promise<Count> {
     return this.commitmentRepository.updateAll(commitment, where);
   }
@@ -121,7 +140,8 @@ export class CommitmentController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.query.object('filter', getFilterSchemaFor(Commitment)) filter?: Filter<Commitment>
+    @param.query.object('filter', getFilterSchemaFor(Commitment))
+    filter?: Filter<Commitment>,
   ): Promise<Commitment> {
     return this.commitmentRepository.findById(id, filter);
   }

@@ -23,9 +23,9 @@ export class StatusCommitments extends Entity {
 
   @property({
     type: 'date',
-    default: '',
+    default: () => new Date(),
   })
-  createdAt?: string;
+  createdAt?: Date;
 
   @property({
     type: 'number',

@@ -1,4 +1,4 @@
-import { Entity, model, property, hasMany} from '@loopback/repository';
+import {Entity, model, property, hasMany} from '@loopback/repository';
 import {StatusCommitments} from './status-commitments.model';
 
 @model()
@@ -12,19 +12,19 @@ export class Commitment extends Entity {
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   description?: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   responsable?: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   observations?: string;
 
@@ -44,13 +44,13 @@ export class Commitment extends Entity {
   @property({
     type: 'array',
     itemType: 'string',
-    required: true,
     default: [],
   })
   attached: string[];
 
   @property({
     type: 'number',
+    required: true,
   })
   meetingId?: number;
 

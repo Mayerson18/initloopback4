@@ -7,3 +7,4 @@ export * from './meeting.controller';
 export * from './attendees.controller';
 export * from './commitment.controller';
 export * from './commitment-status-commitments.controller';
+export * from './status-commitments.controller';

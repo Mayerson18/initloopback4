@@ -1,4 +1,4 @@
-import { Entity, model, property } from '@loopback/repository';
+import {Entity, model, property} from '@loopback/repository';
 
 @model({settings: {strict: false}})
 export class Attendees extends Entity {
@@ -12,7 +12,7 @@ export class Attendees extends Entity {
   @property({
     type: 'string',
     required: true,
-    default: "",
+    default: '',
   })
   name: string;
 
@@ -25,19 +25,19 @@ export class Attendees extends Entity {
   @property({
     type: 'string',
     required: true,
-    default: "",
+    default: '',
   })
   email: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   phone?: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   contact?: string;
 
@@ -55,6 +55,7 @@ export class Attendees extends Entity {
 
   @property({
     type: 'number',
+    required: true,
   })
   meetingId?: number;
   // Define well-known properties here

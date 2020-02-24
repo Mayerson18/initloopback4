@@ -18,12 +18,14 @@ import {
   requestBody,
 } from '@loopback/rest';
 import {Meeting} from '../models';
-import {MeetingRepository} from '../repositories';
+import {MeetingRepository, CommitmentRepository} from '../repositories';
 
 export class MeetingController {
   constructor(
     @repository(MeetingRepository)
     public meetingRepository: MeetingRepository,
+    @repository(CommitmentRepository)
+    public commitmentRepository: CommitmentRepository,
   ) {}
 
   @post('/meetings', {
@@ -127,10 +129,23 @@ export class MeetingController {
     @param.query.object('filter', getFilterSchemaFor(Meeting))
     filter?: Filter<Meeting>,
   ): Promise<Meeting> {
-    return this.meetingRepository.findById(id, filter);
+    const meetings = await this.meetingRepository.findById(id, filter);
+    const attendees = await this.meetingRepository.attendees(id).find();
+    const commitments = await this.meetingRepository.commitments(id).find();
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+    for (let i = 0; i < commitments.length; i++) {
+      const c = commitments[i];
+      const statusCommitments = await this.commitmentRepository
+        .statusCommitments(c.id)
+        .find();
+      c.statusCommitments = statusCommitments;
+    }
+    meetings.attendees = attendees;
+    meetings.commitments = commitments;
+    return meetings;
   }
 
-  @get('/meetings/{userId}', {
+  @get('/meetings/user/{userId}', {
     responses: {
       '200': {
         description: 'Meeting model instance',
