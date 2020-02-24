@@ -1,5 +1,5 @@
-import { Entity, model, property, hasMany } from '@loopback/repository';
-import { Commitment } from './commitment.model';
+import {Entity, model, property, hasMany} from '@loopback/repository';
+import {Commitment} from './commitment.model';
 import {Attendees} from './attendees.model';
 
 @model()
@@ -13,19 +13,19 @@ export class Meeting extends Entity {
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   description?: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   place?: string;
 
   @property({
     type: 'string',
-    default: "",
+    default: '',
   })
   mainTopic?: string;
 
@@ -41,6 +41,11 @@ export class Meeting extends Entity {
   })
   active?: boolean;
 
+  @property({
+    type: 'number',
+    required: true,
+  })
+  userId: number;
 
   @hasMany(() => Commitment)
   commitments: Commitment[];

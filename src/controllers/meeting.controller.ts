@@ -23,7 +23,7 @@ import {MeetingRepository} from '../repositories';
 export class MeetingController {
   constructor(
     @repository(MeetingRepository)
-    public meetingRepository : MeetingRepository,
+    public meetingRepository: MeetingRepository,
   ) {}
 
   @post('/meetings', {
@@ -59,7 +59,8 @@ export class MeetingController {
     },
   })
   async count(
-    @param.query.object('where', getWhereSchemaFor(Meeting)) where?: Where<Meeting>,
+    @param.query.object('where', getWhereSchemaFor(Meeting))
+    where?: Where<Meeting>,
   ): Promise<Count> {
     return this.meetingRepository.count(where);
   }
@@ -80,7 +81,8 @@ export class MeetingController {
     },
   })
   async find(
-    @param.query.object('filter', getFilterSchemaFor(Meeting)) filter?: Filter<Meeting>,
+    @param.query.object('filter', getFilterSchemaFor(Meeting))
+    filter?: Filter<Meeting>,
   ): Promise<Meeting[]> {
     return this.meetingRepository.find(filter);
   }
@@ -102,7 +104,8 @@ export class MeetingController {
       },
     })
     meeting: Meeting,
-    @param.query.object('where', getWhereSchemaFor(Meeting)) where?: Where<Meeting>,
+    @param.query.object('where', getWhereSchemaFor(Meeting))
+    where?: Where<Meeting>,
   ): Promise<Count> {
     return this.meetingRepository.updateAll(meeting, where);
   }
@@ -121,9 +124,34 @@ export class MeetingController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.query.object('filter', getFilterSchemaFor(Meeting)) filter?: Filter<Meeting>
+    @param.query.object('filter', getFilterSchemaFor(Meeting))
+    filter?: Filter<Meeting>,
   ): Promise<Meeting> {
     return this.meetingRepository.findById(id, filter);
+  }
+
+  @get('/meetings/{userId}', {
+    responses: {
+      '200': {
+        description: 'Meeting model instance',
+        content: {
+          'application/json': {
+            schema: getModelSchemaRef(Meeting, {includeRelations: true}),
+          },
+        },
+      },
+    },
+  })
+  async findByUserId(
+    @param.path.number('userId') userId: number,
+    @param.query.object('filter', getFilterSchemaFor(Meeting))
+    filter?: Filter<Meeting>,
+  ): Promise<Meeting[]> {
+    return this.meetingRepository.find({
+      where: {
+        userId,
+      },
+    });
   }
 
   @patch('/meetings/{id}', {

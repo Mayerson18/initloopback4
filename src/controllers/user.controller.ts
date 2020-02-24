@@ -159,7 +159,6 @@ export class UserController {
     @param.query.object('filter', getFilterSchemaFor(User))
     filter?: Filter<User>,
   ): Promise<User[]> {
-    console.log('try :');
     return this.userRepository.find(filter);
   }
 
@@ -402,7 +401,7 @@ export class UserController {
   })
   async loginByToken(
     @requestBody(CredentialsRequestBody) user: any,
-  ): Promise<{token: string}> {
+  ): Promise<{token: string; userId: number}> {
     // ensure the user exists, and the password is correct
     await verifyToken(user.token, this.userTokensRepository);
     const userAux = await this.userService.verifyCredentials(user);
@@ -412,7 +411,7 @@ export class UserController {
 
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
-    return {token};
+    return {token, userId: userProfile.id};
   }
 }
 
@@ -424,7 +423,7 @@ const generateTokenToPhone = async (
     throw new HttpErrors.NotFound('El correo electrónico no existe.');
   }
 
-  const date = moment().add(TIME_LIFE, 'm');
+  const date = moment(new Date()).add(TIME_LIFE, 'm');
   const hashids = new Hashids();
   const token = hashids.encode(
     getRandomArbitrary(0, 9),
@@ -433,12 +432,13 @@ const generateTokenToPhone = async (
   );
 
   console.log('token', token);
+  console.log('date', date);
 
   const userTokenAux = new UserTokens({
     token,
     status: true,
     userId: user.id,
-    expiredAt: date.format('YYYY-MM-DD hh:mm:ss'),
+    expiredAt: date.toString(),
   });
   await userTokensRepository.create(userTokenAux);
   return token;
@@ -461,9 +461,11 @@ const verifyToken = async (
   }
 
   const expiredAt = moment(userToken.expiredAt);
-  console.log('moment().diff(expiredAt)', moment().diff(expiredAt));
-
-  if (moment().diff(expiredAt) >= 0) {
+  if (
+    moment(new Date())
+      .add(1, 'm')
+      .diff(expiredAt) >= 0
+  ) {
     throw new HttpErrors.Conflict('El Token expiro.');
   }
   return userToken;
