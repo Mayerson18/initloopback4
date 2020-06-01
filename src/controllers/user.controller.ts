@@ -363,7 +363,7 @@ export class UserController {
       userProfile,
       this.userTokensRepository,
     );
-    const userAux = await this.userRepository.findById(userProfile.id);
+    /*const userAux = await this.userRepository.findById(userProfile.id);
     console.log('userAux', userAux);
     const options: any = {
       method: 'POST',
@@ -379,7 +379,7 @@ export class UserController {
       json: true,
     };
     console.log('options.body.phone', options.body.phone);
-    rp(options);
+    rp(options);*/
     return {status: true};
   }
 
